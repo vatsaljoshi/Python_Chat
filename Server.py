@@ -2,10 +2,8 @@ import atexit
 import socket
 import threading
 
-"""
-NEW CODE
-"""
-from Crypto.Cipher import AES
+from cryptography.fernet import Fernet
+
 def connectionThread(sock):
     # Accepts a connection request and stores both a socket object and its IP address
     while True:
@@ -18,11 +16,30 @@ def connectionThread(sock):
         addresses[client] = address
         threading.Thread(target=clientThread, args=(client,)).start()
 
+"""def do_decrypt(text):
+    global decrypted_text
+    obj2 = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
+    message = obj2.decrypt(text)
+    return message"""
+
+
 def clientThread(client):
     # Handles the client
     address = addresses[client][0]
+    name=address
+    global ip
+    ip=address
+
+    key = Fernet.generate_key()
+    crypter = Fernet(key)
+    print("The key for all upcoming communications will be: ",bytes(key))
+
     try:
         user = getNickname(client)
+        client.send("Hi {} ,sending you the key---> ".format(user).encode("utf8"))
+        client.send(bytes(key))
+        client.send("\ncopy and paste when asked for?")
+
     except:
         print("Connection denied for {}!".format(address))
         del addresses[client]
@@ -30,19 +47,23 @@ def clientThread(client):
         return
     print("{} set its nickname to {}!".format(address, user))
     users[client] = user
+
+    #sending the key to the client
     try:
-        client.send("Hi {}! You are now connected to pyChat. Type \"/help\" for a list of available commands!".format(user).encode("utf8"))
+        client.send("\nHi {}! You are now connected to pyChat. Type \"/help\" for a list of available commands!".format(user).encode("utf8"))
     except:
         print("Communication error with {} ({}).".format(address, user))
         del addresses[client]
         del users[client]
         client.close()
         return
-    broadcast("{} has joined the chat room!".format(user))
+    broadcast("\n{} has joined the chat room!".format(user))
 
     # Handles specific messages in a different way (user commands)
     while True:
         try:
+
+            #yaha hoga encryption decryption for the server side.
             message = client.recv(2048).decode("utf8")
             if message == "/quit":
                 client.send("You left the chat!".encode("utf8"))
@@ -73,7 +94,7 @@ def getNickname(client):
     client.send("Welcome to pyChat! Please type your nickname:".encode("utf8"))
     nickname = client.recv(2048).decode("utf8")
     alreadyTaken = False
-    choice = str(input(f"Do you want to remove {nickname}-yes or no"))
+    choice = str(input(f"Do you want to remove '{ip}' -yes or no"))
     if choice=='yes':
         print("Removed user.".format(address))
         del addresses[client]

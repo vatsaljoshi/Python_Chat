@@ -7,8 +7,7 @@ import threading
 """
 NEW CODE
 """
-from Crypto.Cipher import AES
-
+from cryptography.fernet import Fernet
 
 def currentTime():
     # Retrieves local time formatted as HH:MM:SS
@@ -26,9 +25,14 @@ def deleteLastLine():
 """
 def send(sock):
     # Handles sending messages to the server
+    global key, crypter
+    print("please enter the server-provided key...\n")
+    key=str(input())
+    crypter=Fernet(key)
     while threadFlag:
         try:
             message = input()
+            crypter.encrypt(message)
             #function ko call kiya, waha encrypt kiya aur return karwake send kiya
             #encrypt(messsage)
             #message=cipher
@@ -40,9 +44,11 @@ def send(sock):
 
 def receive(sock):
     # Handles receiving messages from the server
+    global crypter,key
     while threadFlag:
         try:
             message = sock.recv(2048).decode()
+            crypter.decrypt(message)
             #decrypt(message)
             #message=cipher
             if message:
