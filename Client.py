@@ -33,7 +33,7 @@ def send(sock):
         try:
             message = input()
             crypter.encrypt(message)
-            #function ko call kiya, waha encrypt kiya aur return karwake send kiya
+            #Called function,encrypted the string and returned it.
             #encrypt(messsage)
             #message=cipher
             deleteLastLine()
@@ -92,8 +92,6 @@ def main():
 
 # Flag used for threads termination
 threadFlag = True
-
-
 
 if __name__ == "__main__":
     main()

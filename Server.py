@@ -1,8 +1,7 @@
 import atexit
 import socket
 import threading
-
-from cryptography.fernet import Fernet
+#from lazyme.string import color_print
 
 def connectionThread(sock):
     # Accepts a connection request and stores both a socket object and its IP address
@@ -16,13 +15,6 @@ def connectionThread(sock):
         addresses[client] = address
         threading.Thread(target=clientThread, args=(client,)).start()
 
-"""def do_decrypt(text):
-    global decrypted_text
-    obj2 = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
-    message = obj2.decrypt(text)
-    return message"""
-
-
 def clientThread(client):
     # Handles the client
     address = addresses[client][0]
@@ -30,15 +22,9 @@ def clientThread(client):
     global ip
     ip=address
 
-    key = Fernet.generate_key()
-    crypter = Fernet(key)
-    print("The key for all upcoming communications will be: ",bytes(key))
 
     try:
         user = getNickname(client)
-        client.send("Hi {} ,sending you the key---> ".format(user).encode("utf8"))
-        client.send(bytes(key))
-        client.send("\ncopy and paste when asked for?")
 
     except:
         print("Connection denied for {}!".format(address))
@@ -62,8 +48,6 @@ def clientThread(client):
     # Handles specific messages in a different way (user commands)
     while True:
         try:
-
-            #yaha hoga encryption decryption for the server side.
             message = client.recv(2048).decode("utf8")
             if message == "/quit":
                 client.send("You left the chat!".encode("utf8"))
