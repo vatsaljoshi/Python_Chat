@@ -1,16 +1,22 @@
 import atexit
 import socket
 import threading
-#from lazyme.string import color_print
 
+"""
+NEW CODE
+"""
+from Crypto.Cipher import AES
 def connectionThread(sock):
     # Accepts a connection request and stores both a socket object and its IP address
     while True:
         try:
             client, address = sock.accept()
+
         except:
             print("Something went wrong while accepting incoming connections!")
             break
+        global ip
+        ip=address
         print("{} has connected.".format(address[0]))
         addresses[client] = address
         threading.Thread(target=clientThread, args=(client,)).start()
@@ -18,14 +24,8 @@ def connectionThread(sock):
 def clientThread(client):
     # Handles the client
     address = addresses[client][0]
-    name=address
-    global ip
-    ip=address
-
-
     try:
         user = getNickname(client)
-
     except:
         print("Connection denied for {}!".format(address))
         del addresses[client]
@@ -33,17 +33,15 @@ def clientThread(client):
         return
     print("{} set its nickname to {}!".format(address, user))
     users[client] = user
-
-    #sending the key to the client
     try:
-        client.send("\nHi {}! You are now connected to pyChat. Type \"/help\" for a list of available commands!".format(user).encode("utf8"))
+        client.send("Hi {}! You are now connected to pyChat. Type \"/help\" for a list of available commands!".format(user).encode("utf8"))
     except:
         print("Communication error with {} ({}).".format(address, user))
         del addresses[client]
         del users[client]
         client.close()
         return
-    broadcast("\n{} has joined the chat room!".format(user))
+    broadcast("{} has joined the chat room!".format(user))
 
     # Handles specific messages in a different way (user commands)
     while True:
@@ -78,13 +76,17 @@ def getNickname(client):
     client.send("Welcome to pyChat! Please type your nickname:".encode("utf8"))
     nickname = client.recv(2048).decode("utf8")
     alreadyTaken = False
+    #verification part
     choice = str(input(f"Do you want to remove '{ip}' -yes or no"))
+    #the block where an user is removed form the application.
     if choice=='yes':
-        print("Removed user.".format(address))
+        client.send(" You were removed.".format(ip).encode("utf-8"))
+        print("Removed user.".format(ip))
         del addresses[client]
         client.close()
     else:
         pass
+
     if nickname in users.values():
         alreadyTaken = True
         while alreadyTaken:
@@ -126,7 +128,7 @@ def main():
     # Binds the serverSocket at the specified port number
     serverSocket.bind((host, port))
     # Enables accepting connections
-    serverSocket.listen()
+    serverSocket.listen()#you have to set it on listening otherwise it won't connect.
     # Welcome message to the server owner
     print("pyChat server is up and running!")
     print("Listening for new connections on port {}.".format(port))
